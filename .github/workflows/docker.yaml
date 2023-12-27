@@ -32,7 +32,7 @@ jobs:
       - name: Configure build image tag
         shell: bash
         run: |
-          commitShortSHA=`echo ${INPUT_COMMITSHA} | cut -c1-8`
+          commitShortSHA=`echo ${{ inputs.commitsha }} | cut -c1-8`
           buildTime=`date +%Y%m%d%H%M%S`
           IMAGE_TAG="$commitShortSHA-$buildTime"
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
