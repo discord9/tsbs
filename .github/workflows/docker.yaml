@@ -3,7 +3,7 @@ name: Build tsbs docker image manually
 on:
   workflow_dispatch:
     inputs:
-      commit_sha:
+      CommitSha:
         description: 'Commit sha to build image'
         required: true
         type: string
@@ -32,7 +32,7 @@ jobs:
       - name: Configure build image tag
         shell: bash
         run: |
-          commitShortSHA=`echo ${inputs.commit_sha} | cut -c1-8`
+          commitShortSHA=`echo ${INPUT_COMMITSHA} | cut -c1-8`
           buildTime=`date +%Y%m%d%H%M%S`
           IMAGE_TAG="$commitShortSHA-$buildTime"
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
@@ -40,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${inputs.commit_sha}
+          ref: ${INPUT_COMMITSHA}
 
       - name: Build and push image
         uses: docker/build-push-action@v3
