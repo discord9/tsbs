@@ -3,7 +3,7 @@ name: Build tsbs docker image manually
 on:
   workflow_dispatch:
     inputs:
-      CommitSha:
+      commitsha:
         description: 'Commit sha to build image'
         required: true
         type: string
@@ -40,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: $INPUT_COMMITSHA
+          ref: ${{ inputs.commitsha }}
 
       - name: Build and push image
         uses: docker/build-push-action@v3
