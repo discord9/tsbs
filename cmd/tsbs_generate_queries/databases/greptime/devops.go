@@ -74,7 +74,7 @@ func (d *Devops) GroupByOrderByLimit(qi query.Query) {
 
 	humanLabel := "Influx max cpu over last 5 min-intervals (random end)"
 	humanDesc := fmt.Sprintf("%s: %s", humanLabel, interval.StartString())
-	influxql := fmt.Sprintf(`SELECT max(usage_user), date_trunc('minute', ts) from cpu %s group by date_trunc('minute', ts) limit 5`, where)
+	influxql := fmt.Sprintf(`SELECT max(usage_user), date_trunc('minute', ts) from cpu %s group by date_trunc('minute', ts) order by date_trunc('minute', ts) desc limit 5`, where)
 	d.fillInQuery(qi, humanLabel, humanDesc, influxql)
 }
 
