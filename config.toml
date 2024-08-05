@@ -1,0 +1,11 @@
+[http_options]
+addr = "0.0.0.0:4000"
+timeout = "30s"
+
+[storage]
+data_home = "/home/discord9/tsbs/db/data/"
+type = "File"
+
+[logging]
+dir = "/home/discord9/tsbs/db/logs"
+level = "info,flow=debug"
