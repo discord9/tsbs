@@ -4,7 +4,7 @@ This manual helps developers reproduce the test results from the "GreptimeDB vs.
 
 ## Testing Tools
 
-GreptimeDB fork branch, which adds support for GreptimeDB and InfluxDB v2 compared to the official version:
+GreptimeDB forked repo, which adds support for GreptimeDB and InfluxDB v2 compared to the official version:
 [https://github.com/GreptimeTeam/tsbs](https://github.com/GreptimeTeam/tsbs)
 
 ## Test Environment
@@ -55,6 +55,7 @@ tar xvfz influxdb2-2.7.7_linux_amd64.tar.gz
 Additionally, install CLI:
 ```sh
 wget https://download.influxdata.com/influxdb/releases/influxdb2-client-2.7.5-linux-amd64.tar.gz
+tar xvfz influxdb2-client-2.7.5-linux-amd64.tar.gz
 ```
 
 Start the server:
@@ -70,7 +71,7 @@ Output:
 
 ### Installing GreptimeDB
 
-Refer to the official documentation for installing GreptimeDB:
+Refer to the official documentation for installing GreptimeDB. You can also refer to the following steps to install GreptimeDB v0.9.1.
 
 Create greptime directory in the home directory:
 ```sh
