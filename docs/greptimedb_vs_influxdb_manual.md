@@ -238,4 +238,3 @@ Run the queries in the `tsbs` directory:
 - [Greptime Team TSBS](https://github.com/GreptimeTeam/tsbs)
 - TSBS v0.9 vs InfluxDB
 
----
