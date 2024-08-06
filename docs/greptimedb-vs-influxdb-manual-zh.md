@@ -99,7 +99,7 @@ tar xvfz greptime-linux-amd64-v0.9.1.tar.gz
 
 ### 测试数据生成
 
-**TSBS** [Time Series Benchmark Suite] 并没有提供预编译的二进制，需要手动编译。编译 **TSBS** 需要提前安装 **Go**。具体可以参考 https://go.dev/doc/install 。测试使用的版本是 **1.22.5**.
+**TSBS** [Time Series Benchmark Suite] 并没有提供预编译的二进制，需要手动编译。编译 **TSBS** 需要提前安装 **Go**。具体可以参考 https://go.dev/doc/install 。测试使用的版本是 **1.22.5**。
 
 安装 **Go** 之后，你可以 clone TSBS 到当前目录：
 ```bash
@@ -238,7 +238,7 @@ export INFLUX2_TOKEN="VTw2gBvdrgqQLpR2drSfiVgaVy-W4LLnJ1JiyLIAHgYhKYJdj9eW3Z26pn
 在 `tsbs` 目录下，执行查询
 ```sh
 ./bin/tsbs_run_queries_influx --file=./bench-data/influx-queries-cpu-max-all-1.dat          --db-name=test-bucket   --is-v2=true  --auth-token=$INFLUX2_TOKEN   --urls="http://localhost:8086"
-...(repeat for all queries)...
+...(用类似的命令执行所有查询)...
 ```
 
 ### GreptimeDB
@@ -310,7 +310,7 @@ experimental_write_cache_size = "20G"
 在 `tsbs` 目录下，执行查询：
 ```sh
 ./bin/tsbs_run_queries_influx --file=./bench-data/greptime-queries-cpu-max-all-1.dat          --db-name=benchmark   --urls="http://localhost:4000"
-...(用类似的命令执行其他查询)...
+...(用类似的命令执行所有查询)...
 ```
 
 ## 参考链接
