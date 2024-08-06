@@ -136,7 +136,7 @@ Export the token for subsequent requests:
 export INFLUX2_TOKEN="VTw2gBvdrgqQLpR2drSfiVgaVy-W4LLnJ1JiyLIAHgYhKYJdj9eW3Z26pnjelCiC7Q-dBGHvpZpGykjE_WqIgQ=="
 ```
 
-### Data Import
+#### Data Import
 To import data in the `tsbs` directory, run the following command:
 ```sh
 ./bin/tsbs_load_influx2 \
