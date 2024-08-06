@@ -71,7 +71,7 @@ tar xvfz influxdb2-client-2.7.5-linux-amd64.tar.gz
 
 ### 安装 GreptimeDB
 
-GreptimeDB 的安装可以参考官方文档。你也可以参照下面的步骤安装 GreptimeDB v0.9.0。
+GreptimeDB 的安装可以参考官方文档。你也可以参照下面的步骤安装 GreptimeDB v0.9.1。
 
 在当前用户 home 目录下创建 greptime 目录
 ```sh
