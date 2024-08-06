@@ -289,9 +289,9 @@ enable_experimental_write_cache = true
 experimental_write_cache_size = "20G"
 ```
 
-Startup command assuming the GreptimeDB binary path is `./greptime-linux-amd64-v0.9.1/greptime` and the config file path is `/home/ubuntu/greptime/config-s3.toml`:
+Startup command assuming the GreptimeDB binary path is `./greptime` and the config file path is `/home/ubuntu/greptime/config-s3.toml`:
 ```sh
-./greptime-linux-amd64-v0.9.1/greptime standalone start --config /home/ubuntu/greptime/config-s3.toml
+./greptime standalone start --config /home/ubuntu/greptime/config-s3.toml
 ```
 
 #### Data Import
