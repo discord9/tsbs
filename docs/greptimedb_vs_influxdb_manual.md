@@ -1,13 +1,13 @@
-GreptimeDB vs. InfluxDB TSBS Testing Manual
+# GreptimeDB vs. InfluxDB TSBS Testing Manual
 
 This manual helps developers reproduce the test results from the "GreptimeDB vs. InfluxDB Performance Test Report". For detailed results, please read the report.
 
-### Testing Tools
+## Testing Tools
 
 GreptimeDB fork branch, which adds support for GreptimeDB and InfluxDB v2 compared to the official version:
 [https://github.com/GreptimeTeam/tsbs](https://github.com/GreptimeTeam/tsbs)
 
-### Test Environment
+## Test Environment
 
 **Hardware Environment:**
 - **Instance Type:** c5d.2xlarge
@@ -23,9 +23,9 @@ GreptimeDB fork branch, which adds support for GreptimeDB and InfluxDB v2 compar
 
 Except for GreptimeDB being set up with local caching for S3 testing, all other parameter configurations remain default without special adjustments.
 
-### Software Installation
+## Software Installation
 
-#### Installing Go
+### Installing Go
 
 Download link:
 [https://go.dev/dl/go1.22.5.linux-amd64.tar.gz](https://go.dev/dl/go1.22.5.linux-amd64.tar.gz)
@@ -38,7 +38,7 @@ export PATH=$PATH:/usr/local/go/bin
 go version
 ```
 
-#### Installing InfluxDB
+### Installing InfluxDB
 
 Create influxdb2 directory:
 ```sh
@@ -68,7 +68,7 @@ Output:
 ...(trimmed for brevity)...
 ```
 
-#### Installing GreptimeDB
+### Installing GreptimeDB
 
 Refer to the official documentation for installing GreptimeDB:
 
@@ -94,11 +94,11 @@ Alternatively, you can configure additional parameters via a configuration file.
 ./greptime-linux-amd64-v0.9.1/greptime standalone start --config-file /path/to/config.toml
 ```
 
-### Test Execution
+## Test Execution
 
-#### InfluxDB
+### InfluxDB
 
-Initialize:
+#### Initialize
 After the first installation, InfluxDB needs to be initialized to obtain a token for requests. If you already have a token, you can skip this part.
 
 Initialize InfluxDB:
@@ -136,7 +136,7 @@ Export the token for subsequent requests:
 export INFLUX2_TOKEN="VTw2gBvdrgqQLpR2drSfiVgaVy-W4LLnJ1JiyLIAHgYhKYJdj9eW3Z26pnjelCiC7Q-dBGHvpZpGykjE_WqIgQ=="
 ```
 
-Data Import:
+### Data Import
 To import data in the `tsbs` directory, run the following command:
 ```sh
 ./bin/tsbs_load_influx2 \
@@ -150,18 +150,18 @@ To import data in the `tsbs` directory, run the following command:
     --auth-token=$INFLUX2_TOKEN
 ```
 
-Queries:
+#### Queries
 Run the queries in the `tsbs` directory:
 ```sh
 ./bin/tsbs_run_queries_influx --file=./bench-data/influx-queries-cpu-max-all-1.dat          --db-name=test-bucket   --is-v2=true  --auth-token=$INFLUX2_TOKEN   --urls="http://localhost:8086"
 ...(repeat for all queries)...
 ```
 
-#### GreptimeDB
+### GreptimeDB
 
 GreptimeDB was tested with both local disk and S3-based object storage. Configurations for both are as follows:
 
-**Local Disk (EBS):**
+#### Local Disk (EBS)
 Configuration file used for testing:
 ```toml
 [http]
@@ -179,7 +179,7 @@ Startup command assuming the GreptimeDB binary path is `./greptime-linux-amd64-v
 ./greptime-linux-amd64-v0.9.1/greptime standalone start --config /home/ubuntu/greptime/config-local.toml
 ```
 
-**S3 Object Storage:**
+#### S3 Object Storage
 When using S3, additional S3 configurations are required. Example configuration during testing with local disk cache enabled:
 ```toml
 [http]
@@ -211,7 +211,7 @@ Startup command assuming the GreptimeDB binary path is `./greptime-linux-amd64-v
 ./greptime-linux-amd64-v0.9.1/greptime standalone start --config /home/ubuntu/greptime/config-s3.toml
 ```
 
-Data Import:
+#### Data Import
 To import data in the `tsbs` directory, run the following command:
 ```sh
 ./bin/tsbs_load_greptime \
@@ -222,14 +222,14 @@ To import data in the `tsbs` directory, run the following command:
     --workers=6
 ```
 
-Queries:
+#### Queries
 Run the queries in the `tsbs` directory:
 ```sh
 ./bin/tsbs_run_queries_influx --file=./bench-data/greptime-queries-cpu-max-all-1.dat          --db-name=benchmark   --urls="http://localhost:4000"
 ...(repeat for all queries)...
 ```
 
-### References
+## References
 
 - [InfluxData Downloads](https://www.influxdata.com/downloads/)
 - [InfluxDB Installation](https://docs.influxdata.com/influxdb/v2/install/#start-influxdb)
