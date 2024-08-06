@@ -257,9 +257,9 @@ dir = "/home/ubuntu/greptime/logs"
 data_home = "/home/ubuntu/greptime/data-local"
 ```
 
-Startup command assuming the GreptimeDB binary path is `./greptime-linux-amd64-v0.9.1/greptime` and the config file path is `/home/ubuntu/greptime/config-local.toml`:
+Startup command assuming the GreptimeDB binary path is `./greptime` and the config file path is `/home/ubuntu/greptime/config-local.toml`:
 ```sh
-./greptime-linux-amd64-v0.9.1/greptime standalone start --config /home/ubuntu/greptime/config-local.toml
+./greptime standalone start --config /home/ubuntu/greptime/config-local.toml
 ```
 
 #### S3 Object Storage
