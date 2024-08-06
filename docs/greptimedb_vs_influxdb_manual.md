@@ -96,6 +96,89 @@ Alternatively, you can configure additional parameters via a configuration file.
 
 ## Test Execution
 
+### Test Data Generation
+
+**TSBS** [Time Series Benchmark Suite] does not provide precompiled binaries, so it needs to be compiled manually. Compiling **TSBS** requires **Go** to be installed beforehand. You can refer to https://go.dev/doc/install for specific details. The version used this time is **1.22.5**.
+
+After installing **Go**, you can clone TSBS to the current directory:
+```bash
+git clone https://github.com/GreptimeTeam/tsbs.git
+```
+
+If **make** is not available, you need to install **make** first:
+```bash
+sudo apt install make
+```
+
+Navigate to the **tsbs** directory and run **make** to compile TSBS. The first time you compile, it might take a while as some dependencies are downloaded:
+```bash
+cd tsbs
+make
+```
+
+Once the compilation is successful, you should see many binaries generated under the **bin** directory, although we will only use a part of them:
+```bash
+$ ls ./bin/
+tsbs_generate_data     tsbs_load_influx2           tsbs_run_queries_clickhouse
+tsbs_generate_queries  tsbs_load_mongo             tsbs_run_queries_cratedb
+tsbs_load              tsbs_load_prometheus        tsbs_run_queries_influx
+tsbs_load_akumuli      tsbs_load_questdb           tsbs_run_queries_mongo
+tsbs_load_cassandra    tsbs_load_siridb            tsbs_run_queries_questdb
+tsbs_load_clickhouse   tsbs_load_timescaledb       tsbs_run_queries_siridb
+tsbs_load_cratedb      tsbs_load_victoriametrics   tsbs_run_queries_timescaledb
+tsbs_load_greptime     tsbs_run_queries_akumuli    tsbs_run_queries_timestream
+tsbs_load_influx       tsbs_run_queries_cassandra  tsbs_run_queries_victoriametrics
+```
+
+To generate a directory to store the generated data, you can create a new directory within the **tsbs** directory:
+```bash
+mkdir bench-data
+```
+
+Run the data generation command, where `influx-data.lp` is the generated test data file, which will be used for single-machine testing:
+```bash
+./bin/tsbs_generate_data --use-case="cpu-only" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:00Z" --log-interval="10s" --format="influx" > ./bench-data/influx-data.lp
+```
+
+Execute the following commands to generate queries for **InfluxDB**:
+```bash
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type cpu-max-all-1 --format="influx" > ./bench-data/influx-queries-cpu-max-all-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type cpu-max-all-8 --format="influx" > ./bench-data/influx-queries-cpu-max-all-8.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-1 --format="influx" > ./bench-data/influx-queries-double-groupby-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-5 --format="influx" > ./bench-data/influx-queries-double-groupby-5.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-all --format="influx" > ./bench-data/influx-queries-double-groupby-all.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type groupby-orderby-limit --format="influx" > ./bench-data/influx-queries-groupby-orderby-limit.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type high-cpu-1 --format="influx" > ./bench-data/influx-queries-high-cpu-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type high-cpu-all --format="influx" > ./bench-data/influx-queries-high-cpu-all.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=10 --query-type lastpoint --format="influx" > ./bench-data/influx-queries-lastpoint.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-1-1 --format="influx" > ./bench-data/influx-queries-single-groupby-1-1-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-1-12 --format="influx" > ./bench-data/influx-queries-single-groupby-1-1-12.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-8-1 --format="influx" > ./bench-data/influx-queries-single-groupby-1-8-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-1-1 --format="influx" > ./bench-data/influx-queries-single-groupby-5-1-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-1-12 --format="influx" > ./bench-data/influx-queries-single-groupby-5-1-12.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-8-1 --format="influx" > ./bench-data/influx-queries-single-groupby-5-8-1.dat
+```
+
+Execute the following commands to generate queries for **GreptimeDB**:
+```bash
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type cpu-max-all-1 --format="greptime" > ./bench-data/greptime-queries-cpu-max-all-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type cpu-max-all-8 --format="greptime" > ./bench-data/greptime-queries-cpu-max-all-8.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-1 --format="greptime" > ./bench-data/greptime-queries-double-groupby-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-5 --format="greptime" > ./bench-data/greptime-queries-double-groupby-5.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type double-groupby-all --format="greptime" > ./bench-data/greptime-queries-double-groupby-all.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type groupby-orderby-limit --format="greptime" > ./bench-data/greptime-queries-groupby-orderby-limit.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type high-cpu-1 --format="greptime" > ./bench-data/greptime-queries-high-cpu-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=50 --query-type high-cpu-all --format="greptime" > ./bench-data/greptime-queries-high-cpu-all.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=10 --query-type lastpoint --format="greptime" > ./bench-data/greptime-queries-lastpoint.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-1-1 --format="greptime" > ./bench-data/greptime-queries-single-groupby-1-1-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-1-12 --format="greptime" > ./bench-data/greptime-queries-single-groupby-1-1-12.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-1-8-1 --format="greptime" > ./bench-data/greptime-queries-single-groupby-1-8-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-1-1 --format="greptime" > ./bench-data/greptime-queries-single-groupby-5-1-1.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-1-12 --format="greptime" > ./bench-data/greptime-queries-single-groupby-5-1-12.dat
+./bin/tsbs_generate_queries --use-case="devops" --seed=123 --scale=4000 --timestamp-start="2023-06-11T00:00:00Z" --timestamp-end="2023-06-14T00:00:01Z" --queries=100 --query-type single-groupby-5-8-1 --format="greptime" > ./bench-data/greptime-queries-single-groupby-5-8-1.dat
+```
+
+
 ### InfluxDB
 
 #### Initialize
