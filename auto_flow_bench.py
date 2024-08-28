@@ -52,13 +52,34 @@ def kill_db(handlers: list[subprocess.Popen]):
         # os.killpg(os.getpgid(handler.pid), signal.SIGINT)
 
 
-def create_flow(flow_num: int):
+def create_flow(flow_num: int, key_num = 4000):
     # time range is 2023-06-11 00:00:00.000000 to  2023-06-13 23:59:50.000000
+    factor = 4000 // key_num
+    query = """CREATE FLOW {flow_name} 
+  SINK TO {flow_sink}
+  AS 
+  SELECT 
+    substr(hostname, 6)::int/{factor} as host_group, 
+    sum(CASE WHEN usage_user > 50 THEN usage_user ELSE 0 END) 
+    FROM benchmark.cpu 
+    GROUP BY host_group;"""
+    # This will use 100% cpu
+    overcap_query = """CREATE FLOW {flow_name} 
+  SINK TO {flow_sink}
+  AS 
+  SELECT 
+    hostname, 
+    sum(CASE WHEN usage_user > 50 THEN usage_user ELSE 0 END) 
+    FROM benchmark.cpu 
+    GROUP BY hostname;"""
     # create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "CREATE FLOW {flow_name} SINK TO cnt_cpu AS SELECT SUM(usage_user), date_bin(INTERVAL '1 hour', ts) as time_window FROM benchmark.cpu GROUP BY time_window;";"""
-    create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "CREATE FLOW {flow_name} SINK TO cnt_cpu AS SELECT count(ts) from benchmark.cpu;";"""
+    # create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "CREATE FLOW {flow_name} SINK TO cnt_cpu AS SELECT count(ts) from benchmark.cpu;";"""
+    create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "{flow_query}";"""
+
     for i in range(flow_num):
-        os.system(create_flow.format(flow_name=f"flow_{i}"))
-        #time.sleep(0.1)
+        cur_query = query.format(flow_name=f"flow_{i}", flow_sink=f"cnt_cpu_{i}", factor=factor)
+        os.system(create_flow.format(flow_query=cur_query))
+        # time.sleep(0.1)
 
 
 def prepare_table():
@@ -103,8 +124,14 @@ def read_mem_cpu(pids: list[int], pid2name: dict) -> dict:
         }
     return ret
 
-def get_db_pid()->list[int]:
-    return [p.info["pid"] for p in psutil.process_iter(attrs=["pid", "name"]) if "greptime" in p.info["name"]]
+
+def get_db_pid() -> list[int]:
+    return [
+        p.info["pid"]
+        for p in psutil.process_iter(attrs=["pid", "name"])
+        if "greptime" in p.info["name"]
+    ]
+
 
 class Usage:
     def __init__(self) -> None:
@@ -135,7 +162,14 @@ def start_pprof(duration: int, svg_path: str = "flow_pprof.svg") -> subprocess.P
         stdout=f,
     )
 
-def wait_for_end_insertion(usage: Usage, tsbs_handler: subprocess.Popen, db_pid: int, save_path: str, pid2name: dict):
+
+def wait_for_end_insertion(
+    usage: Usage,
+    tsbs_handler: subprocess.Popen,
+    db_pid: int,
+    save_path: str,
+    pid2name: dict,
+):
     start = time.time()
     while tsbs_handler.poll() == None:
         cpu_mem = read_mem_cpu([db_pid], pid2name)
@@ -147,7 +181,8 @@ def wait_for_end_insertion(usage: Usage, tsbs_handler: subprocess.Popen, db_pid:
         cpu_mem = read_mem_cpu([db_pid], pid2name)
         usage.append_and_dump(cpu_mem, save_path)
         after_bench_wait -= 1
-    
+
+
 def baseline(save_path: str = "usage_baseline.json", with_samply=False):
     """baseline tsbs test with no flows"""
     clean_db_dir("db")
@@ -167,14 +202,16 @@ def baseline(save_path: str = "usage_baseline.json", with_samply=False):
 
 
 if __name__ == "__main__":
-    CNT = 500
+    CNT = 1
+    KEY_NUM = 400
     prepare_table()
-    create_flow(CNT)
-    db_pids= get_db_pid()
+    create_flow(CNT, key_num=KEY_NUM)
+    db_pids = get_db_pid()
 
     tsbs = load_greptime()
     usage = Usage()
     while tsbs.poll() == None:
         cpu_mem = read_mem_cpu(db_pids, {db_pids[0]: "greptime"})
-        usage.append_and_dump(cpu_mem, "usage_{CNT}.json".format(CNT=CNT))
-
+        usage.append_and_dump(cpu_mem, f"usage_{CNT}_{KEY_NUM}.json")
+    if CNT >0:
+        os.system("""psql -h 127.0.0.1 -p 4003 -d public -c "select * from cnt_cpu_0;" """)
