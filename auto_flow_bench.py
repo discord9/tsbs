@@ -328,7 +328,7 @@ if __name__ == "__main__":
             "-d",
             "public",
             "-c",
-            '"SELECT count(1) FROM cnt_cpu_0;"',
+            "SELECT count(1) FROM cnt_cpu_0;",
         ]
         with open("bench_log/query_result_{}.txt".format(arg["run_name"]), "w") as f:
             subprocess.Popen(
@@ -339,7 +339,15 @@ if __name__ == "__main__":
             ).wait()
 
         time.sleep(5)
+        print("Try kill db")
         kill_db([db_handler])
+        time.sleep(5)
+        if db_handler.poll() != None:
+            print("db killed")
+        else:
+            print("db not killed, force kill")
+            os.kill(db_handler.pid, signal.SIGKILL)
+
 
         os.system(
             "cp tsbs_write.txt bench_log/tsbs_write_{}.txt".format(arg["run_name"])
