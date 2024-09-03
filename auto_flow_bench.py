@@ -4,6 +4,9 @@ from pathlib import Path
 import time
 import subprocess
 import json
+import atexit
+import plot_flow_bench
+import signal
 
 
 def clean_db_dir(path: str):
@@ -16,8 +19,9 @@ def start_greptime(
     run_name: str = "baseline",
     mode: Literal["standalone", "distributed"] = "standalone",
     with_samply=False,
+    db_log="db.log",
 ) -> list[subprocess.Popen] | tuple[subprocess.Popen, dict[int, str]]:
-    f = open("db.log", "w")
+    f = open(db_log, "w")
     if mode == "standalone":
         handler = subprocess.Popen(
             (
@@ -25,7 +29,7 @@ def start_greptime(
                 if with_samply
                 else []
                 + [
-                    "/home/discord9/greptimedb/target/release/greptime",
+                    "./greptime",
                     "standalone",
                     "start",
                     "-c",
@@ -52,10 +56,10 @@ def kill_db(handlers: list[subprocess.Popen]):
         # os.killpg(os.getpgid(handler.pid), signal.SIGINT)
 
 
-def create_flow(flow_num: int, key_num = 4000):
+def create_flow(flow_num: int, key_num=4000, flow_type="simple"):
     # time range is 2023-06-11 00:00:00.000000 to  2023-06-13 23:59:50.000000
     factor = 4000 // key_num
-    query = """CREATE FLOW {flow_name} 
+    complex_query = """CREATE FLOW {flow_name} 
   SINK TO {flow_sink}
   AS 
   SELECT 
@@ -64,20 +68,22 @@ def create_flow(flow_num: int, key_num = 4000):
     FROM benchmark.cpu 
     GROUP BY host_group;"""
     # This will use 100% cpu
-    overcap_query = """CREATE FLOW {flow_name} 
-  SINK TO {flow_sink}
-  AS 
-  SELECT 
-    hostname, 
-    sum(CASE WHEN usage_user > 50 THEN usage_user ELSE 0 END) 
-    FROM benchmark.cpu 
-    GROUP BY hostname;"""
+    simple_query = """CREATE FLOW {flow_name} SINK TO {flow_sink} AS SELECT count(ts) from benchmark.cpu;"""
+
+    if flow_type == "simple":
+        query = simple_query
+    elif flow_type == "complex":
+        query = complex_query
+    else:
+        raise ValueError("flow_type must be simple or complex")
     # create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "CREATE FLOW {flow_name} SINK TO cnt_cpu AS SELECT SUM(usage_user), date_bin(INTERVAL '1 hour', ts) as time_window FROM benchmark.cpu GROUP BY time_window;";"""
     # create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "CREATE FLOW {flow_name} SINK TO cnt_cpu AS SELECT count(ts) from benchmark.cpu;";"""
     create_flow = """psql -h 127.0.0.1 -p 4003 -d public -c "{flow_query}";"""
 
     for i in range(flow_num):
-        cur_query = query.format(flow_name=f"flow_{i}", flow_sink=f"cnt_cpu_{i}", factor=factor)
+        cur_query = query.format(
+            flow_name=f"flow_{i}", flow_sink=f"cnt_cpu_{i}", factor=factor
+        )
         os.system(create_flow.format(flow_query=cur_query))
         # time.sleep(0.1)
 
@@ -201,17 +207,143 @@ def baseline(save_path: str = "usage_baseline.json", with_samply=False):
     kill_db([db_handler])
 
 
-if __name__ == "__main__":
-    CNT = 1
-    KEY_NUM = 400
-    prepare_table()
-    create_flow(CNT, key_num=KEY_NUM)
-    db_pids = get_db_pid()
+def show_results(flow_num):
+    """
+    show the results of the flow"""
+    if flow_num > 0:
+        os.system(
+            """psql -h 127.0.0.1 -p 4003 -d public -c "select * from cnt_cpu_0;" """
+        )
 
-    tsbs = load_greptime()
-    usage = Usage()
-    while tsbs.poll() == None:
-        cpu_mem = read_mem_cpu(db_pids, {db_pids[0]: "greptime"})
-        usage.append_and_dump(cpu_mem, f"usage_{CNT}_{KEY_NUM}.json")
-    if CNT >0:
-        os.system("""psql -h 127.0.0.1 -p 4003 -d public -c "select * from cnt_cpu_0;" """)
+
+if __name__ == "__main__":
+    # baseline, simple, complex 100, 400, 1000, 2000, 4000
+    benchargs = [
+        {
+            "run_name": "baseline",
+            "flow_num": 0,
+            "key_num": 1,
+            "db_log": "bench_log/db_baseline.log",
+            "usage_save": "bench_log/usage_baseline.json",
+        },
+        {
+            "run_name": "simple_1",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_1.log",
+            "usage_save": "bench_log/usage_simple_1.json",
+        },
+        {
+            "run_name": "complex_100",
+            "flow_num": 1,
+            "key_num": 100,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_100.log",
+            "usage_save": "bench_log/usage_complex_100.json",
+        },
+        {
+            "run_name": "complex_400",
+            "flow_num": 1,
+            "key_num": 400,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_400.log",
+            "usage_save": "bench_log/usage_complex_400.json",
+        },
+        {
+            "run_name": "complex_1000",
+            "flow_num": 1,
+            "key_num": 1000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_1000.log",
+            "usage_save": "bench_log/usage_complex_1000.json",
+        },
+        {
+            "run_name": "complex_2000",
+            "flow_num": 1,
+            "key_num": 2000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_2000.log",
+            "usage_save": "bench_log/usage_complex_2000.json",
+        },
+        {
+            "run_name": "complex_4000",
+            "flow_num": 1,
+            "key_num": 4000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_4000.log",
+            "usage_save": "bench_log/usage_complex_4000.json",
+        },
+    ]
+    MEM_THRESHOLD = 20 * 1024 * 1024 * 1024  # 20GB
+    mem_overflow_countdown = (
+        10  # if memory usage is over MEM_THRESHOLD, wait for 10 seconds before exit
+    )
+    for arg in benchargs:
+        print("-" * 20)
+        print("Running: ", arg["run_name"])
+        if not os.path.exists("bench_log"):
+            os.makedirs("bench_log")
+        create_flow_arg = {
+            key: arg[key] for key in ["flow_num", "key_num", "flow_type"] if key in arg
+        }
+
+        os.system("rm -r db")
+        time.sleep(1)
+        db_handler, pid2name = start_greptime(
+            run_name=arg["run_name"],
+            mode="standalone",
+            with_samply=False,
+            db_log=arg["db_log"],
+        )
+        print("db boot, pid: ", db_handler.pid)
+        atexit.register(lambda: kill_db([db_handler]))
+
+        time.sleep(5)
+        prepare_table()
+        print("Table prepared")
+
+        create_flow(**create_flow_arg)
+        if arg["flow_num"] > 0:
+            print("Flows created")
+
+        tsbs = load_greptime()
+        print("Start tsbs, pid: ", tsbs.pid)
+        usage = Usage()
+        while tsbs.poll() == None:
+            cpu_mem = read_mem_cpu([db_handler.pid], {db_handler.pid: "greptime"})
+            mem = cpu_mem["greptime"]["memory_info"][0]
+            if mem > MEM_THRESHOLD:
+                print("Memory usage over threshold, will kill db in 10 seconds")
+                break
+
+            usage.append_and_dump(cpu_mem, arg["usage_save"])
+
+        query_result = [
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "4003",
+            "-d",
+            "public",
+            "-c",
+            '"SELECT count(1) FROM cnt_cpu_0;"',
+        ]
+        with open("bench_log/query_result_{}.txt".format(arg["run_name"]), "w") as f:
+            subprocess.Popen(
+                query_result,
+                stdout=f,
+                stderr=f,
+                text=True,
+            ).wait()
+
+        time.sleep(5)
+        kill_db([db_handler])
+
+        os.system(
+            "cp tsbs_write.txt bench_log/tsbs_write_{}.txt".format(arg["run_name"])
+        )
+
+        plot_flow_bench.draw(arg["usage_save"])
+        print("Done: ", arg["run_name"])
