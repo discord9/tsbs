@@ -1,0 +1,11 @@
+[http]
+addr = "0.0.0.0:4000"
+timeout = "30s"
+
+[storage]
+data_home = "db/data/"
+type = "File"
+
+[logging]
+dir = "db/logs"
+level = "info"
