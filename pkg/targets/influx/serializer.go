@@ -22,8 +22,8 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 	buf = append(buf, p.MeasurementName()...)
 
 	fakeTags := make([]int, 0)
-	tagKeys := p.TagKeys()
-	tagValues := p.TagValues()
+	tagKeys := make([][]byte, 0) //p.TagKeys()
+	tagValues := make([]interface{}, 0) //p.TagValues()
 	for i := 0; i < len(tagKeys); i++ {
 		if tagValues[i] == nil {
 			continue
@@ -38,7 +38,7 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 			fakeTags = append(fakeTags, i)
 		}
 	}
-	fieldKeys := p.FieldKeys()
+	fieldKeys := append(p.TagKeys(), p.FieldKeys()...)
 	if len(fakeTags) > 0 || len(fieldKeys) > 0 {
 		buf = append(buf, ' ')
 	}
@@ -53,7 +53,7 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 		buf = appendField(buf, tagKeys[tagIndex], tagValues[tagIndex])
 	}
 
-	fieldValues := p.FieldValues()
+	fieldValues := append(p.TagValues(), p.FieldValues()...)
 	for i := 0; i < len(fieldKeys); i++ {
 		value := fieldValues[i]
 		if value == nil {
@@ -83,12 +83,18 @@ func appendField(buf, key []byte, v interface{}) []byte {
 	buf = append(buf, key...)
 	buf = append(buf, '=')
 
-	buf = serialize.FastFormatAppend(v, buf)
 
 	// Influx uses 'i' to indicate integers:
 	switch v.(type) {
 	case int, int64:
+		buf = serialize.FastFormatAppend(v, buf)
 		buf = append(buf, 'i')
+	case string:
+		buf = append(buf, '"')
+		buf = serialize.FastFormatAppend(v, buf)
+		buf = append(buf, '"')
+	default:
+		buf = serialize.FastFormatAppend(v, buf)
 	}
 
 	return buf

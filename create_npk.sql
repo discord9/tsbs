@@ -1,5 +1,4 @@
-CREATE TABLE IF NOT EXISTS "cpu" (    
-  "fake" BIGINT NULL,                                                                                               
+CREATE TABLE IF NOT EXISTS "cpu" (                                                                                            
   "hostname" STRING NULL,                                                                                                            
   "region" STRING NULL,                                                                                                              
   "datacenter" STRING NULL,                                                                                                          
@@ -22,7 +21,6 @@ CREATE TABLE IF NOT EXISTS "cpu" (
   "usage_guest_nice" BIGINT NULL,                                                                                                    
   "ts" TIMESTAMP(9) NOT NULL,                                                                                                        
   TIME INDEX ("ts"),
-  PRIMARY KEY ("fake")
 )                                                                                                                                    
                                                                                                                                      
 ENGINE=mito                                                                                                                          
