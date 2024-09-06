@@ -24,7 +24,6 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 	fakeTags := make([]int, 0)
 	tagKeys := p.TagKeys()
 	tagValues := p.TagValues()
-	isFirst := true
 	for i := 0; i < len(tagKeys); i++ {
 		if tagValues[i] == nil {
 			continue
@@ -32,9 +31,6 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 		switch v := tagValues[i].(type) {
 		case string:
 			buf = append(buf, ',')
-			if isFirst {
-				buf = append(buf, "fake=1i "...)
-			}
 			buf = append(buf, tagKeys[i]...)
 			buf = append(buf, '=')
 			buf = append(buf, []byte(v)...)
@@ -44,7 +40,7 @@ func (s *Serializer) Serialize(p *data.Point, w io.Writer) (err error) {
 	}
 	fieldKeys := p.FieldKeys()
 	if len(fakeTags) > 0 || len(fieldKeys) > 0 {
-		buf = append(buf, ',')
+		buf = append(buf, ' ')
 	}
 	firstFieldFormatted := false
 	for i := 0; i < len(fakeTags); i++ {
