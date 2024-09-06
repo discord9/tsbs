@@ -1,6 +1,6 @@
 [http]
 addr = "0.0.0.0:4000"
-timeout = "30s"
+timeout = "120s"
 
 [storage]
 data_home = "db/data/"
