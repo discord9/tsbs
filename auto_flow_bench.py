@@ -243,6 +243,14 @@ if __name__ == "__main__":
             "usage_save": "bench_log/usage_complex_100.json",
         },
         {
+            "run_name": "complex_100_100",
+            "flow_num": 100,
+            "key_num": 100,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_100_100.log",
+            "usage_save": "bench_log/usage_complex_100_100.json",
+        },
+        {
             "run_name": "complex_400",
             "flow_num": 1,
             "key_num": 400,
