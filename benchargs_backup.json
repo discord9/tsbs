@@ -1,0 +1,76 @@
+{
+    "with_samply": true,
+    "benchargs": [
+        {
+            "run_name": "baseline",
+            "flow_num": 0,
+            "key_num": 1,
+            "db_log": "bench_log/db_baseline.log",
+            "usage_save": "bench_log/usage_baseline.json"
+        },
+        {
+            "run_name": "simple_1",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_1.log",
+            "usage_save": "bench_log/usage_simple_1.json"
+        },
+        {
+            "run_name": "complex_100",
+            "flow_num": 1,
+            "key_num": 100,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_100.log",
+            "usage_save": "bench_log/usage_complex_100.json"
+        },
+        {
+            "run_name": "complex_100_20f",
+            "flow_num": 20,
+            "key_num": 100,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_100_20f.log",
+            "usage_save": "bench_log/usage_complex_100_20f.json"
+        },
+        {
+            "run_name": "complex_100_50f",
+            "flow_num": 50,
+            "key_num": 100,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_100_50f.log",
+            "usage_save": "bench_log/usage_complex_100_50f.json"
+        },
+        {
+            "run_name": "complex_400",
+            "flow_num": 1,
+            "key_num": 400,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_400.log",
+            "usage_save": "bench_log/usage_complex_400.json"
+        },
+        {
+            "run_name": "complex_1000",
+            "flow_num": 1,
+            "key_num": 1000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_1000.log",
+            "usage_save": "bench_log/usage_complex_1000.json"
+        },
+        {
+            "run_name": "complex_2000",
+            "flow_num": 1,
+            "key_num": 2000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_2000.log",
+            "usage_save": "bench_log/usage_complex_2000.json"
+        },
+        {
+            "run_name": "complex_4000",
+            "flow_num": 1,
+            "key_num": 4000,
+            "flow_type": "complex",
+            "db_log": "bench_log/db_complex_4000.log",
+            "usage_save": "bench_log/usage_complex_4000.json"
+        }
+    ]
+}

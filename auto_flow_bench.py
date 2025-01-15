@@ -23,19 +23,19 @@ def start_greptime(
 ) -> list[subprocess.Popen] | tuple[subprocess.Popen, dict[int, str]]:
     f = open(db_log, "w")
     if mode == "standalone":
-        handler = subprocess.Popen(
-            (
-                ["samply", "record"]
+        cmd = ((["samply", "record", "-s", "-o", "bench_log/{}.samply.json".format(run_name)]
                 if with_samply
-                else []
+                else [])
                 + [
                     "./greptime",
                     "standalone",
                     "start",
                     "-c",
                     "config.toml",
-                ]
-            ),
+                ])
+        print("Starting db with cmd: ", cmd)
+        handler = subprocess.Popen(
+            cmd,
             stdout=f,
             stderr=f,
             text=True,
@@ -218,79 +218,12 @@ def show_results(flow_num):
 
 if __name__ == "__main__":
     # baseline, simple, complex 100, 400, 1000, 2000, 4000
-    benchargs = [
-        {
-            "run_name": "baseline",
-            "flow_num": 0,
-            "key_num": 1,
-            "db_log": "bench_log/db_baseline.log",
-            "usage_save": "bench_log/usage_baseline.json",
-        },
-        {
-            "run_name": "simple_1",
-            "flow_num": 1,
-            "key_num": 1,
-            "flow_type": "simple",
-            "db_log": "bench_log/db_simple_1.log",
-            "usage_save": "bench_log/usage_simple_1.json",
-        },
-        {
-            "run_name": "complex_100",
-            "flow_num": 1,
-            "key_num": 100,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_100.log",
-            "usage_save": "bench_log/usage_complex_100.json",
-        },
-        {
-            "run_name": "complex_100_20f",
-            "flow_num": 20,
-            "key_num": 100,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_100_20f.log",
-            "usage_save": "bench_log/usage_complex_100_20f.json",
-        },
-        {
-            "run_name": "complex_100_50f",
-            "flow_num": 50,
-            "key_num": 100,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_100_50f.log",
-            "usage_save": "bench_log/usage_complex_100_50f.json",
-        },
-        {
-            "run_name": "complex_400",
-            "flow_num": 1,
-            "key_num": 400,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_400.log",
-            "usage_save": "bench_log/usage_complex_400.json",
-        },
-        {
-            "run_name": "complex_1000",
-            "flow_num": 1,
-            "key_num": 1000,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_1000.log",
-            "usage_save": "bench_log/usage_complex_1000.json",
-        },
-        {
-            "run_name": "complex_2000",
-            "flow_num": 1,
-            "key_num": 2000,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_2000.log",
-            "usage_save": "bench_log/usage_complex_2000.json",
-        },
-        {
-            "run_name": "complex_4000",
-            "flow_num": 1,
-            "key_num": 4000,
-            "flow_type": "complex",
-            "db_log": "bench_log/db_complex_4000.log",
-            "usage_save": "bench_log/usage_complex_4000.json",
-        },
-    ]
+    with open("benchargs.json", "r") as f:
+        args = json.load(f)
+        
+        benchargs = args["benchargs"]
+        with_samply = args["with_samply"]
+
     MEM_THRESHOLD = 20 * 1024 * 1024 * 1024  # 20GB
     mem_overflow_countdown = (
         10  # if memory usage is over MEM_THRESHOLD, wait for 10 seconds before exit
@@ -309,7 +242,7 @@ if __name__ == "__main__":
         db_handler, pid2name = start_greptime(
             run_name=arg["run_name"],
             mode="standalone",
-            with_samply=False,
+            with_samply=with_samply,
             db_log=arg["db_log"],
         )
         print("db boot, pid: ", db_handler.pid)
