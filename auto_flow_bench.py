@@ -48,10 +48,10 @@ def start_greptime(
         raise ValueError("mode must be standalone or distributed")
 
 
-def kill_db(handlers: list[subprocess.Popen]):
+def kill_db(handlers: list[subprocess.Popen], sig: int = signal.SIGINT):
     """kill the db process with SIGINT for graceful shutdown"""
     for handler in handlers:
-        handler.send_signal(signal.SIGINT)
+        handler.send_signal(sig)
         # https://github.com/python/cpython/issues/119059#issuecomment-2113154389
         # os.killpg(os.getpgid(handler.pid), signal.SIGINT)
 
@@ -191,7 +191,6 @@ def wait_for_end_insertion(
 
 def baseline(save_path: str = "usage_baseline.json", with_samply=False):
     """baseline tsbs test with no flows"""
-    clean_db_dir("db")
     db_handler, pid2name = start_greptime(with_samply)
     # wait a bit for db to start
     time.sleep(1)
@@ -230,6 +229,7 @@ if __name__ == "__main__":
     )
     for arg in benchargs:
         print("-" * 20)
+        print("pidof greptime: ", get_db_pid())
         print("Running: ", arg["run_name"])
         if not os.path.exists("bench_log"):
             os.makedirs("bench_log")
@@ -237,7 +237,7 @@ if __name__ == "__main__":
             key: arg[key] for key in ["flow_num", "key_num", "flow_type"] if key in arg
         }
 
-        os.system("rm -r db")
+        clean_db_dir("db")
         time.sleep(1)
         db_handler, pid2name = start_greptime(
             run_name=arg["run_name"],
@@ -294,9 +294,12 @@ if __name__ == "__main__":
         if db_handler.poll() != None:
             print("db killed")
         else:
-            print("db not killed, force kill")
-            os.kill(db_handler.pid, signal.SIGKILL)
-
+            while db_handler.poll() == None:
+                print("db not killed, wait for graceful shutdown")
+                if with_samply:
+                    time.sleep(20)
+                time.sleep(5)
+                kill_db([db_handler], signal.SIGKILL)
 
         os.system(
             "cp tsbs_write.txt bench_log/tsbs_write_{}.txt".format(arg["run_name"])
