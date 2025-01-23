@@ -17,6 +17,55 @@
             "usage_save": "bench_log/usage_simple_1.json"
         },
         {
+            "run_name": "simple_10",
+            "flow_num": 10,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_10.log",
+            "usage_save": "bench_log/usage_simple_10.json"
+        },
+        {
+            "run_name": "simple_100",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_100.log",
+            "usage_save": "bench_log/usage_simple_100.json"
+        },
+        {
+            "run_name": "simple_300",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_300.log",
+            "usage_save": "bench_log/usage_simple_300.json"
+        },
+        {
+            "run_name": "simple_500",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_500.log",
+            "usage_save": "bench_log/usage_simple_500.json"
+        }
+    ],
+    "benchargs_backup": [
+        {
+            "run_name": "baseline",
+            "flow_num": 0,
+            "key_num": 1,
+            "db_log": "bench_log/db_baseline.log",
+            "usage_save": "bench_log/usage_baseline.json"
+        },
+        {
+            "run_name": "simple_1",
+            "flow_num": 1,
+            "key_num": 1,
+            "flow_type": "simple",
+            "db_log": "bench_log/db_simple_1.log",
+            "usage_save": "bench_log/usage_simple_1.json"
+        },
+        {
             "run_name": "complex_100",
             "flow_num": 1,
             "key_num": 100,
