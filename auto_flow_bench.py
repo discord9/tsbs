@@ -7,7 +7,7 @@ import json
 import atexit
 import plot_flow_bench
 import signal
-
+import types
 
 def clean_db_dir(path: str):
     path = Path(path)
@@ -222,6 +222,7 @@ if __name__ == "__main__":
         
         benchargs = args["benchargs"]
         with_samply = args["with_samply"]
+        auto_start_db = args["auto_start_db"]
 
     MEM_THRESHOLD = 20 * 1024 * 1024 * 1024  # 20GB
     mem_overflow_countdown = (
@@ -236,17 +237,21 @@ if __name__ == "__main__":
         create_flow_arg = {
             key: arg[key] for key in ["flow_num", "key_num", "flow_type"] if key in arg
         }
-
-        clean_db_dir("db")
-        time.sleep(1)
-        db_handler, pid2name = start_greptime(
-            run_name=arg["run_name"],
-            mode="standalone",
-            with_samply=with_samply,
-            db_log=arg["db_log"],
-        )
-        print("db boot, pid: ", db_handler.pid)
-        atexit.register(lambda: kill_db([db_handler]))
+        if auto_start_db:
+            clean_db_dir("db")
+            time.sleep(1)
+            db_handler, pid2name = start_greptime(
+                run_name=arg["run_name"],
+                mode="standalone",
+                with_samply=with_samply,
+                db_log=arg["db_log"],
+            )
+            print("db boot, pid: ", db_handler.pid)
+            atexit.register(lambda: kill_db([db_handler]))
+        else:
+            dbpid = get_db_pid()
+            db_handler = {"pid": dbpid[0]}
+            db_handler = types.SimpleNamespace(**db_handler)
 
         time.sleep(5)
         prepare_table()
@@ -286,20 +291,20 @@ if __name__ == "__main__":
                 stderr=f,
                 text=True,
             ).wait()
-
-        time.sleep(5)
-        print("Try kill db")
-        kill_db([db_handler])
-        time.sleep(5)
-        if db_handler.poll() != None:
-            print("db killed")
-        else:
-            while db_handler.poll() == None:
-                print("db not killed, wait for graceful shutdown")
-                if with_samply:
-                    time.sleep(20)
-                time.sleep(5)
-                kill_db([db_handler], signal.SIGKILL)
+        if auto_start_db:
+            time.sleep(5)
+            print("Try kill db")
+            kill_db([db_handler])
+            time.sleep(5)
+            if db_handler.poll() != None:
+                print("db killed")
+            else:
+                while db_handler.poll() == None:
+                    print("db not killed, wait for graceful shutdown")
+                    if with_samply:
+                        time.sleep(30)
+                    time.sleep(5)
+                    kill_db([db_handler], signal.SIGKILL)
 
         os.system(
             "cp tsbs_write.txt bench_log/tsbs_write_{}.txt".format(arg["run_name"])
